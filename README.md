@@ -35,6 +35,7 @@ CREATE OR REPLACE TABLE DB_LAB.CHAT_APP.CONVERSATIONS (
     ROLE STRING,
     CONTENT STRING
 );
+```
 
 🧠 Validation Questions
 1. Which Cortex model did you use and why?
@@ -58,3 +59,6 @@ Context: Streamlit in Snowflake & Cortex Lab
 
 
 
+![alt text](<images/Captura de Pantalla 2026-02-11 a las 16.15.42.png>)
+
+![alt text](<images/Captura de Pantalla 2026-02-11 a las 16.36.37.png>)
