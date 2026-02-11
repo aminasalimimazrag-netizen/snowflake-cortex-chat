@@ -1,37 +1,60 @@
-# Snowflake Cortex Chatbot
+# 🎯 Snowflake Cortex Chatbot Application
 
-This project is a ChatGPT-like web application built using **Streamlit in Snowflake** and **Snowflake Cortex AI**.
+This repository contains a full-stack conversational AI application built entirely within the **Snowflake** ecosystem. It leverages **Streamlit in Snowflake** for the frontend and **Snowflake Cortex** for the Large Language Model (LLM) capabilities.
 
-## 🎯 Project Overview
-- **Platform:** Streamlit in Snowflake
-- **LLM Engine:** Snowflake Cortex (`cortex.complete`)
-- **Storage:** Snowflake Table for chat persistence.
-- **Security:** No external API keys used (100% native Snowflake).
-
-## 🚀 Features
-- Interactive chat interface with history.
-- Model selection (Llama3, Mistral, etc.) and temperature slider in the sidebar.
-- Automatic persistence of messages in the `CONVERSATIONS` table.
-- System prompting to guide AI behavior.
+## 🚀 Project Overview
+The objective of this project was to design a ChatGPT-like application that allows users to interact with supported LLMs directly from Snowflake, without the need for external API keys (like OpenAI) or complex infrastructure.
 
 ## 🧱 Technical Architecture
-1. **Frontend:** Streamlit (deployed inside Snowflake).
-2. **AI Layer:** Snowflake Cortex functions via SQL Snowpark.
-3. **Data Layer:** Snowflake database for conversation logging.
+- **Frontend:** Streamlit in Snowflake.
+- **AI Engine:** Snowflake Cortex (`SNOWFLAKE.CORTEX.COMPLETE`).
+- **Data Layer:** Snowflake Tables (for message persistence).
+- **Security:** Native Snowflake RBAC (Role-Based Access Control).
 
-## 🧠 Validation Questions
+## ✨ Features
+- **Interface:** Clean chat interface using `st.chat_message` and `st.chat_input`.
+- **Model Selector:** Choose between `snowflake-arctic`, `reka-flash`, and `mistral-large2` in the sidebar.
+- **Parameter Control:** Dynamic adjustment of the model's Temperature.
+- **Persistence:** Every message (user and assistant) is automatically saved to a Snowflake table (`CONVERSATIONS`) for audit and history tracking.
+- **State Management:** Uses `st.session_state` to maintain the conversation flow during the session.
 
-**1. Which Cortex model did you use and why?**
-I used `llama3-70b` because it is one of the most powerful models available in Cortex, providing excellent reasoning for general assistance.
+## 🛠️ Environment Setup
 
-**2. How do you manage the conversation history size?**
-The history is managed in `st.session_state` and stored in a Snowflake table. To optimize the prompt, I only send the last few messages to the LLM to keep the context relevant.
+To reproduce this project, run the following SQL script in your Snowflake worksheet:
 
-**3. How did you build the prompt?**
-The prompt is built by combining a system instruction ("You are a helpful assistant") with the user's latest message and previous context, formatted for the Cortex SQL function.
+```sql
+-- Create Environment
+CREATE OR REPLACE WAREHOUSE WH_LAB WAREHOUSE_SIZE = 'XSMALL' AUTO_SUSPEND = 60;
+CREATE OR REPLACE DATABASE DB_LAB;
+CREATE OR REPLACE SCHEMA CHAT_APP;
 
-**4. What technical difficulties did you encounter?**
-The main challenge was handling SQL escaping for single quotes in user messages and ensuring the JSON structure for the `cortex.complete` function was correctly formatted in SQL.
+-- Create Persistence Table
+CREATE OR REPLACE TABLE DB_LAB.CHAT_APP.CONVERSATIONS (
+    CONVERSATION_ID STRING,
+    TIMESTAMP TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+    ROLE STRING,
+    CONTENT STRING
+);
 
-**5. How to guarantee the confidentiality of stored conversations?**
-By using Snowflake's native Role-Based Access Control (RBAC), ensuring that only authorized roles can query the `CONVERSATIONS` table and keeping all data within the Snowflake security perimeter.
+🧠 Validation Questions
+1. Which Cortex model did you use and why?
+I implemented a selection of models including snowflake-arctic, reka-flash, and mistral-large2. I chose snowflake-arctic as the primary option because it is Snowflake s native model, optimized for enterprise tasks and efficiency within the platform.
+2. How do you manage the size of the conversation history?
+Currently, the history is managed through st.session_state for the immediate UI display. For the LLM context, I use a prompt construction that passes the current user input. To handle large-scale history, a "sliding window" or "message summarization" strategy could be implemented to stay within token limits.
+3. How did you build the prompt?
+The prompt is constructed dynamically by sanitizing the user input (escaping single quotes for SQL safety) and wrapping it in a clear context:
+"User: {prompt}\nAssistant:"
+This ensures the LLM understands the conversational structure.
+4. What technical difficulties did you encounter?
+The main challenge was handling SQL syntax requirements when inserting user-generated text into the Snowflake table. Specifically, escaping single quotes (e.g., converting "I'm" to "I''m") was crucial to prevent SQL compilation errors during the INSERT and SELECT operations.
+5. How to guarantee the confidentiality of stored conversations?
+Confidentiality is guaranteed by the Snowflake architecture. Since the application is native:
+Data never leaves the Snowflake security perimeter.
+No third-party APIs are called.
+Access to the CONVERSATIONS table is restricted by Snowflake s Role-Based Access Control (RBAC).
+
+Developed by: Amina Salimi
+Context: Streamlit in Snowflake & Cortex Lab
+
+
+
